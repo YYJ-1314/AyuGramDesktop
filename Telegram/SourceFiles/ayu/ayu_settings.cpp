@@ -999,6 +999,12 @@ void AyuSettings::setDownloadBoost(bool val) {
 	save();
 }
 
+void AyuSettings::setDisableSensitiveBlur(bool val) {
+	if (_disableSensitiveBlur.current() == val) return;
+	_disableSensitiveBlur = val;
+	save();
+}
+
 void AyuSettings::setStickerConfirmation(bool val) {
 	if (_stickerConfirmation.current() == val) return;
 	_stickerConfirmation = val;
@@ -1161,6 +1167,7 @@ void to_json(nlohmann::json &j, const AyuSettings &s) {
 		{"showMessageShot", s._showMessageShot.current()},
 		{"filterZalgo", s._filterZalgo.current()},
 		{"downloadBoost", s._downloadBoost.current()},
+		{"disableSensitiveBlur", s._disableSensitiveBlur.current()},
 		{"stickerConfirmation", s._stickerConfirmation.current()},
 		{"gifConfirmation", s._gifConfirmation.current()},
 		{"voiceConfirmation", s._voiceConfirmation.current()},
@@ -1266,6 +1273,7 @@ void from_json(const nlohmann::json &j, AyuSettings &s) {
 	s._showMessageShot = j.value("showMessageShot", defaults._showMessageShot.current());
 	s._filterZalgo = j.value("filterZalgo", defaults._filterZalgo.current());
 	s._downloadBoost = j.value("downloadBoost", defaults._downloadBoost.current());
+	s._disableSensitiveBlur = j.value("disableSensitiveBlur", defaults._disableSensitiveBlur.current());
 	s._stickerConfirmation = j.value("stickerConfirmation", defaults._stickerConfirmation.current());
 	s._gifConfirmation = j.value("gifConfirmation", defaults._gifConfirmation.current());
 	s._voiceConfirmation = j.value("voiceConfirmation", defaults._voiceConfirmation.current());

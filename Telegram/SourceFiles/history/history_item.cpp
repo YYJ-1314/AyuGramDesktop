@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/history_item.h"
+#include "ayu/ayu_settings.h"
 
 #include "api/api_premium.h"
 #include "api/api_sensitive_content.h"
@@ -4595,6 +4596,9 @@ QString HistoryItem::computeUnavailableReason() const {
 }
 
 bool HistoryItem::isMediaSensitive() const {
+	if (AyuSettings::getInstance().disableSensitiveBlur()) {
+		return false;
+	}
 	if (!(_flags & MessageFlag::SensitiveContent)
 		&& !_history->peer->hasSensitiveContent()) {
 		return false;

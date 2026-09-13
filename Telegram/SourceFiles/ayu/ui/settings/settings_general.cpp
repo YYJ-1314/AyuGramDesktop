@@ -285,6 +285,17 @@ void BuildQoLToggles(SectionBuilder &builder, AyuSectionBuilder &ayu) {
 
 	ayu.addSectionDivider();
 
+	builder.addSubsectionTitle(rpl::single(QString("Privacy")));
+
+	ayu.addSettingToggle({
+		.id = u"ayu/disableSensitiveBlur"_q,
+		.title = tr::ayu_DisableSensitiveBlur(),
+		.getter = &AyuSettings::disableSensitiveBlur,
+		.setter = &AyuSettings::setDisableSensitiveBlur,
+	});
+
+	ayu.addSectionDivider();
+
 	builder.addSubsectionTitle(rpl::single(QString("Webview")));
 
 	ayu.addSettingToggle({

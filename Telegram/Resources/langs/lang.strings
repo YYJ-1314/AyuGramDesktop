@@ -9004,6 +9004,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_SettingsShowMessageSeconds" = "Show Message Seconds";
 "ayu_FilterZalgo" = "Filter Zalgo";
 "ayu_DownloadBoost" = "下载加速 Download Boost";
+"ayu_DisableSensitiveBlur" = "默认不遮掩敏感内容 (Show sensitive media)";
 "ayu_ImproveLinkPreviews" = "Improve Link Previews";
 "ayu_ShowOnlyAddedEmojisAndStickers" = "Show Only Added Emojis & Stickers";
 "ayu_ContextCopyID" = "Copy ID";
