@@ -274,6 +274,17 @@ void BuildQoLToggles(SectionBuilder &builder, AyuSectionBuilder &ayu) {
 
 	ayu.addSectionDivider();
 
+	builder.addSubsectionTitle(rpl::single(QString("Downloads")));
+
+	ayu.addSettingToggle({
+		.id = u"ayu/downloadBoost"_q,
+		.title = tr::ayu_DownloadBoost(),
+		.getter = &AyuSettings::downloadBoost,
+		.setter = &AyuSettings::setDownloadBoost,
+	});
+
+	ayu.addSectionDivider();
+
 	builder.addSubsectionTitle(rpl::single(QString("Webview")));
 
 	ayu.addSettingToggle({
