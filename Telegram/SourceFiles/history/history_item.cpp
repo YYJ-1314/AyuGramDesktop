@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/history_item.h"
 #include "ayu/ayu_settings.h"
-#include "ayu/ayu_settings.h"
 
 #include "api/api_premium.h"
 #include "api/api_sensitive_content.h"
