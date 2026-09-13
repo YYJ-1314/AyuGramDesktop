@@ -5,12 +5,14 @@ on:
 
 env:
   PREPARE_PATH: Telegram/build/prepare/prepare.py
+  MSBUILDDISABLENODEREUSE: 1
+  MSBUILDNOINPROCNODE: 1
 
 jobs:
 
   prepare:
     name: Prepare libraries (slow first run, then cached)
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 350
     defaults:
       run:
@@ -61,7 +63,6 @@ jobs:
         name: Native Tools Command Prompt.
         with:
           arch: x64
-          toolset: 14.44
 
       - name: ThirdParty cache.
         uses: actions/cache@v4
@@ -91,6 +92,27 @@ jobs:
           key: ${{ runner.OS }}-x64-qt6-rel-${{ env.CACHE_KEY }}
           restore-keys: ${{ runner.OS }}-x64-qt6-rel-
 
+      - name: Free up disk space before libraries.
+        shell: bash
+        run: |
+          echo '=== disk before ==='
+          df -h /c 2>/dev/null || true
+          for d in \
+            "/c/Android" "/c/Program Files/Android" "/c/Program Files (x86)/Android" \
+            "/c/Program Files/Boost" "/c/Program Files/Eclipse" \
+            "/c/hostedtoolcache/windows/Go" "/c/hostedtoolcache/windows/Ruby" \
+            "/c/hostedtoolcache/windows/Java_Television" \
+            "/c/Program Files/Julia" "/c/Miniconda" "/c/Anaconda" \
+            "/c/Program Files/MongoDB" "/c/Program Files/MySQL" \
+            "/c/Program Files/PostgreSQL" "/c/Program Files/Microsoft SQL Server" \
+            "/c/Program Files/dotnet/sdk" \
+          ; do
+            if [ -d "$d" ]; then rm -rf "$d" 2>/dev/null && echo "removed $d"; fi
+          done
+          rm -rf /c/Windows/SoftwareDistribution/Download/* 2>/dev/null || true
+          echo '=== disk after ==='
+          df -h /c 2>/dev/null || true
+
       - name: Libraries.
         run: |
           %TBUILD%\%REPO_NAME%\Telegram\build\prepare\win.bat silent qt6
@@ -102,7 +124,7 @@ jobs:
   build:
     name: Build AyuGram.exe
     needs: prepare
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 350
     defaults:
       run:
@@ -137,7 +159,6 @@ jobs:
         name: Native Tools Command Prompt.
         with:
           arch: x64
-          toolset: 14.44
 
       - name: ThirdParty cache.
         uses: actions/cache@v4
