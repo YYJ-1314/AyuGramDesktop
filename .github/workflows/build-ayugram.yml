@@ -2,9 +2,6 @@ name: Build AyuGram (download boost)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - dev
 
 env:
   PREPARE_PATH: Telegram/build/prepare/prepare.py
