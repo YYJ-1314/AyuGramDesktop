@@ -14,7 +14,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_document.h"
 #include "apiwrap.h"
-#include "ayu/ayu_settings.h"
 #include "base/openssl_help.h"
 
 namespace Storage {
@@ -22,49 +21,51 @@ namespace {
 
 constexpr auto kKillSessionTimeout = 15 * crl::time(1000);
 constexpr auto kMaxTrackedSessionRemoves = 64;
-constexpr auto kMaxTrackedSuccesses = 3 * kMaxTrackedSessionRemoves;
 constexpr auto kResetDownloadPrioritiesTimeout = crl::time(200);
 
-[[nodiscard]] bool DownloadBoost() {
-	return AyuSettings::getInstance().downloadBoost();
-}
+// Hard floor for session removal, deliberately independent of the tuning
+// level: StartSessionsCount() only decides how many sessions we *start*
+// with. If it were also used as the floor, switching to a higher level
+// while a download runs on a single session would let removeSession() pop
+// below StartSessionsCount() and trip its Assert.
+constexpr auto kMinSessionsCount = 1;
 
 [[nodiscard]] int StartSessionsCount() {
-	return DownloadBoost() ? 4 : 1;
+	return DownloadTuning::Current().startSessions;
 }
 
 [[nodiscard]] int MaxSessionsCount() {
-	return DownloadBoost() ? 16 : 8;
+	return DownloadTuning::Current().maxSessions;
 }
 
 [[nodiscard]] int StartWaitedInSession() {
-	return (DownloadBoost() ? 8 : 4) * kDownloadPartSize;
+	return DownloadTuning::Current().startWaitedParts * kDownloadPartSize;
 }
 
 [[nodiscard]] int MaxWaitedInSession() {
-	return (DownloadBoost() ? 32 : 16) * kDownloadPartSize;
+	return DownloadTuning::Current().maxWaitedParts * kDownloadPartSize;
 }
 
 [[nodiscard]] crl::time RetryAddSessionTimeout() {
-	return (DownloadBoost() ? 2 : 8) * crl::time(1000);
+	return DownloadTuning::Current().addSessionTimeout * crl::time(1000);
 }
 
 [[nodiscard]] int RetryAddSessionSuccesses() {
-	return DownloadBoost() ? 1 : 3;
+	return DownloadTuning::Current().addSessionSuccesses;
 }
 
 [[nodiscard]] int RemoveSessionAfterTimeouts() {
-	return DownloadBoost() ? 8 : 4;
+	return DownloadTuning::Current().removeAfterTimeouts;
 }
 
 [[nodiscard]] crl::time BadRequestDurationThreshold() {
-	return (DownloadBoost() ? 12 : 8) * crl::time(1000);
+	return DownloadTuning::Current().badRequestSeconds * crl::time(1000);
 }
 
 // Each (session remove by timeouts) we wait for time:
-// kRetryAddSessionTimeout * max(removesCount, kMaxTrackedSessionRemoves)
+// RetryAddSessionTimeout() * max(removesCount, kMaxTrackedSessionRemoves)
 // and for successes in all remaining sessions:
-// kRetryAddSessionSuccesses * max(removesCount, kMaxTrackedSessionRemoves)
+// RetryAddSessionSuccesses() * max(removesCount, kMaxTrackedSessionRemoves)
 
 } // namespace
 
@@ -297,7 +298,9 @@ void DownloadManagerMtproto::requestSucceeded(
 			).arg(index
 			).arg(data.maxWaitedAmount));
 	}
-	data.successes = std::min(data.successes + 1, kMaxTrackedSuccesses);
+	data.successes = std::min(
+		data.successes + 1,
+		RetryAddSessionSuccesses() * kMaxTrackedSessionRemoves);
 	const auto notEnough = ranges::any_of(
 		dc.sessions,
 		_1 < (dc.sessionRemoveTimes + 1) * RetryAddSessionSuccesses(),
@@ -350,7 +353,7 @@ void DownloadManagerMtproto::sessionTimedOut(MTP::DcId dcId, int index) {
 	for (auto &session : dc.sessions) {
 		session.successes = 0;
 	}
-	if (dc.sessions.size() == StartSessionsCount()
+	if (dc.sessions.size() == kMinSessionsCount
 		|| ++dc.timeouts < RemoveSessionAfterTimeouts()) {
 		return;
 	}
@@ -360,7 +363,7 @@ void DownloadManagerMtproto::sessionTimedOut(MTP::DcId dcId, int index) {
 
 void DownloadManagerMtproto::removeSession(MTP::DcId dcId) {
 	auto &dc = _balanceData[dcId];
-	Assert(dc.sessions.size() > StartSessionsCount());
+	Assert(dc.sessions.size() > kMinSessionsCount);
 	const auto index = int(dc.sessions.size() - 1);
 	DEBUG_LOG(("Download (%1,%2) removing, now sessions: %3"
 		).arg(dcId
@@ -378,9 +381,10 @@ void DownloadManagerMtproto::removeSession(MTP::DcId dcId) {
 	auto &session = dc.sessions.back();
 
 	// Make sure we don't send anything to that session while redirecting.
-	session.requested += MaxWaitedInSession() * MaxSessionsCount();
+	const auto blockedAmount = MaxWaitedInSession() * MaxSessionsCount();
+	session.requested += blockedAmount;
 	queue.removeSession(index);
-	Assert(session.requested == MaxWaitedInSession() * MaxSessionsCount());
+	Assert(session.requested == blockedAmount);
 
 	dc.sessions.pop_back();
 	api().instance().killSession(MTP::downloadDcId(dcId, index));
