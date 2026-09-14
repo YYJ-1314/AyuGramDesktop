@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "media/streaming/media_streaming_loader.h"
 #include "media/streaming/media_streaming_reader.h"
+#include "storage/download_tuning.h"
 
 namespace Storage {
 namespace {
@@ -16,7 +17,9 @@ namespace {
 using namespace Media::Streaming;
 
 constexpr auto kPartSize = Loader::kPartSize;
-constexpr auto kRequestPartsCount = 32;
+[[nodiscard]] int RequestPartsCount() {
+	return DownloadTuning::Current().preloadParts;
+}
 
 } // namespace
 
@@ -85,7 +88,7 @@ Data::FileOrigin StreamedFileDownloader::fileOrigin() const {
 void StreamedFileDownloader::requestParts() {
 	while (!_finished
 		&& _nextPartIndex < _partsCount
-		&& _partsRequested < kRequestPartsCount) {
+		&& _partsRequested < RequestPartsCount()) {
 		requestPart();
 	}
 	_reader->continueDownloaderFromMainThread();
