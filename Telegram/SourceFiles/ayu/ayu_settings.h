@@ -444,7 +444,6 @@ public:
 	void setStreamerMode(bool val);
 	void setDownloadBoost(bool val);
 	void setDisableSensitiveBlur(bool val);
-	void setDisableSensitiveBlur(bool val);
 
 	[[nodiscard]] rpl::producer<bool> useGlobalGhostModeValue() const { return _useGlobalGhostMode.value(); }
 	[[nodiscard]] rpl::producer<bool> useGlobalGhostModeChanges() const { return _useGlobalGhostMode.changes(); }
