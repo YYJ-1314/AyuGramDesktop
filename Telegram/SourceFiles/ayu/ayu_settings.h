@@ -355,7 +355,6 @@ public:
 	[[nodiscard]] bool streamerMode() const { return _streamerMode.current(); }
 	[[nodiscard]] bool downloadBoost() const { return _downloadBoost.current(); }
 	[[nodiscard]] bool disableSensitiveBlur() const { return _disableSensitiveBlur.current(); }
-	[[nodiscard]] bool disableSensitiveBlur() const { return _disableSensitiveBlur.current(); }
 
 	void setSaveDeletedMessages(bool val);
 	void setSaveMessagesHistory(bool val);
@@ -625,8 +624,6 @@ public:
 	[[nodiscard]] rpl::producer<bool> downloadBoostChanges() const { return _downloadBoost.changes(); }
 	[[nodiscard]] rpl::producer<bool> disableSensitiveBlurValue() const { return _disableSensitiveBlur.value(); }
 	[[nodiscard]] rpl::producer<bool> disableSensitiveBlurChanges() const { return _disableSensitiveBlur.changes(); }
-	[[nodiscard]] rpl::producer<bool> disableSensitiveBlurValue() const { return _disableSensitiveBlur.value(); }
-	[[nodiscard]] rpl::producer<bool> disableSensitiveBlurChanges() const { return _disableSensitiveBlur.changes(); }
 
 	friend void to_json(nlohmann::json &j, const AyuSettings &s);
 	friend void from_json(const nlohmann::json &j, AyuSettings &s);
@@ -724,7 +721,6 @@ private:
 	rpl::variable<bool> _singleCornerRadius = false;
 	rpl::variable<bool> _streamerMode = false;
 	rpl::variable<bool> _downloadBoost = true;
-	rpl::variable<bool> _disableSensitiveBlur = true;
 	rpl::variable<bool> _disableSensitiveBlur = true;
 
 	rpl::variable<bool> _useGlobalGhostMode = true;
