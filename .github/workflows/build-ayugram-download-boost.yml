@@ -91,6 +91,43 @@ jobs:
           key: ${{ runner.OS }}-x64-qt6-rel-${{ env.CACHE_KEY }}
           restore-keys: ${{ runner.OS }}-x64-qt6-rel-
 
+      - name: Free disk space (Qt build needs a lot).
+        shell: cmd
+        run: |
+          rmdir /S /Q "C:\Android\android-sdk" 2>nul
+          rmdir /S /Q "C:\Program Files\Android\android-sdk" 2>nul
+          rmdir /S /Q "%ProgramFiles(x86)%\Android\android-sdk" 2>nul
+          rmdir /S /Q "%LocalAppData%\Android\Sdk" 2>nul
+          rmdir /S /Q "C:\Program Files\dotnet" 2>nul
+          rmdir /S /Q "C:\Program Files\PostgreSQL" 2>nul
+          rmdir /S /Q "C:\Program Files\MySQL" 2>nul
+          rmdir /S /Q "C:\Program Files\MongoDB" 2>nul
+          rmdir /S /Q "C:\Program Files\Haskell" 2>nul
+          echo Disk freed.
+
+      - name: Build Qt in release only (halves disk and time).
+        shell: bash
+        run: |
+          cd "$TBUILD/$REPO_NAME"
+          python -c '
+          import re
+          p = "Telegram/build/prepare/prepare.py"
+          s = open(p, encoding="utf-8").read()
+          blocks = re.findall(r"stage\(.qt_. \+ qt, \"\"\".*?\n\"\"\"\)", s, re.S)
+          tgt = [b for b in blocks if "-feature-c++20" in b and "LCMS2" in b]
+          if len(tgt) != 1:
+              print("qt6 stage not found, skip patch")
+              raise SystemExit(0)
+          b = tgt[0]
+          b2 = b.replace("SET CONFIGURATIONS=-debug-and-release", "SET CONFIGURATIONS=-release")
+          b2 = b2.replace("        -force-debug-info ^\n", "")
+          b2 = b2.replace("    cmake --build . --config Debug\n    cmake --install . --config Debug\n", "")
+          i = s.index(b)
+          s = s[:i] + b2 + s[i + len(b):]
+          open(p, "w", encoding="utf-8").write(s)
+          print("prepare.py patched: Qt builds release only")
+          '
+
       - name: Libraries.
         run: |
           %TBUILD%\%REPO_NAME%\Telegram\build\prepare\win.bat silent qt6
