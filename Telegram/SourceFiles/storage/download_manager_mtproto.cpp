@@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_document.h"
 #include "apiwrap.h"
 #include "base/openssl_help.h"
+#include "storage/download_tuning.h"
 
 namespace Storage {
 namespace {
