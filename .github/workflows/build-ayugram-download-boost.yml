@@ -224,6 +224,20 @@ jobs:
         shell: bash
         run: find $LibrariesPath '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/nv-codec-headers/*' ')' -type f ')' -o -empty ')' -delete
 
+      - name: Free disk space (Telegram build needs a lot).
+        shell: cmd
+        run: |
+          rmdir /S /Q "C:\Android\android-sdk" 2>nul
+          rmdir /S /Q "C:\Program Files\Android\android-sdk" 2>nul
+          rmdir /S /Q "%ProgramFiles(x86)%\Android\android-sdk" 2>nul
+          rmdir /S /Q "%LocalAppData%\Android\Sdk" 2>nul
+          rmdir /S /Q "C:\Program Files\dotnet" 2>nul
+          rmdir /S /Q "C:\Program Files\PostgreSQL" 2>nul
+          rmdir /S /Q "C:\Program Files\MySQL" 2>nul
+          rmdir /S /Q "C:\Program Files\MongoDB" 2>nul
+          rmdir /S /Q "C:\Program Files\Haskell" 2>nul
+          echo Disk freed.
+
       - name: Telegram Desktop build.
         run: |
           cd %TBUILD%\%REPO_NAME%\Telegram
